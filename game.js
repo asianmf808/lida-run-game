@@ -31,8 +31,9 @@ let player = {
     height: 90,
     jumping: false,
     vy: 0,
-    jumpPower: -15,
-    gravity: 0.7
+    // УВЕЛИЧЕННЫЙ ПРЫЖОК В 1.5 РАЗА
+    jumpPower: -22.5, // было -15 (15 * 1.5 = 22.5)
+    gravity: 0.6      // чуть меньше гравитации
 };
 
 // ========== CACTUSES ==========
@@ -84,6 +85,14 @@ function drawPlayer() {
     } else {
         ctx.fillStyle = '#ff66b2';
         ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+    
+    // Отображение высоты прыжка (для отладки)
+    if (player.jumping) {
+        const jumpHeight = Math.max(0, (canvas.height - 100) - player.y);
+        ctx.fillStyle = 'rgba(255, 100, 100, 0.5)';
+        ctx.font = '14px Arial';
+        ctx.fillText(`${Math.round(jumpHeight)}px`, player.x - 25, player.y - 10);
     }
 }
 
@@ -141,7 +150,6 @@ function updateCactuses() {
             y: canvas.height - 90,
             width: 40,
             height: 60,
-            // РАБОЧИЙ ХИТБОКС
             hitboxX: 5,
             hitboxY: 25,
             hitboxWidth: 30,
@@ -165,7 +173,6 @@ function updateCactuses() {
 
 function checkCollisions() {
     for (let cactus of cactuses) {
-        // ХИТБОКС КАКТУСА
         const cactusHitbox = {
             x: cactus.x + cactus.hitboxX,
             y: cactus.y + cactus.hitboxY,
@@ -173,7 +180,6 @@ function checkCollisions() {
             height: cactus.hitboxHeight
         };
         
-        // ХИТБОКС ИГРОКА
         const playerHitbox = {
             x: player.x + 15,
             y: player.y + 50,
@@ -257,7 +263,8 @@ function drawStartScreen() {
     ctx.fillStyle = '#333';
     ctx.font = '20px Arial';
     ctx.fillText('Нажми ENTER или кнопку START', canvas.width / 2 - 160, 280);
-    ctx.fillText('ПРОБЕЛ - прыжок (просто нажми)', canvas.width / 2 - 160, 310);
+    ctx.fillText('ПРОБЕЛ - прыжок (высокий!)', canvas.width / 2 - 140, 310);
+    ctx.fillText('Прыжок увеличен в 1.5 раза', canvas.width / 2 - 140, 340);
 }
 
 girlRunImg.onload = drawStartScreen;
