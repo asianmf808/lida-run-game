@@ -20,7 +20,7 @@ let score = 0;
 let best = localStorage.getItem('lidaBest') || 0;
 let gameRunning = false;
 let gamePaused = false;
-let speed = 2.5;
+let speed = 2;
 let gameOverFlag = false;
 
 // ========== PLAYER ==========
@@ -168,7 +168,7 @@ function updateCactuses() {
             height: 60,
             // УЗКИЙ И НИЗКИЙ ХИТБОКС
             hitboxX: 15,           // Отступ слева
-            hitboxY: 40,           // Отступ сверху (только нижняя часть кактуса)
+            hitboxY: 20,           // Отступ сверху (только нижняя часть кактуса)
             hitboxWidth: 10,       // Очень узкий (10px)
             hitboxHeight: 10,      // Очень низкий (10px)
             passed: false
@@ -205,8 +205,8 @@ function checkCollisions() {
         const playerHitbox = {
             x: player.x + 30,      // Большой отступ по ширине
             y: player.y + 70,      // Только нижняя часть игрока
-            width: player.width - 60,   // Очень узкий (10px)
-            height: player.height - 75  // Очень низкий (15px)
+            width: player.width - 30,   // Очень узкий (10px)
+            height: player.height - 30  // Очень низкий (15px)
         };
         
         // Визуализация для отладки
