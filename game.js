@@ -26,14 +26,14 @@ let gameOverFlag = false;
 // ========== PLAYER ==========
 let player = {
     x: 100,
-    y: canvas.height - 100,
+    y: canvas.height - 125,
     width: 70,
     height: 90,
     jumping: false,
     vy: 0,
     // ВЫСОКИЙ И ДОЛГИЙ ПРЫЖОК
     jumpPower: -22.5,
-    gravity: 0.65// УМЕНЬШИЛ ГРАВИТАЦИЮ - прыжок дольше
+    gravity: 0.80// УМЕНЬШИЛ ГРАВИТАЦИЮ - прыжок дольше
 };
 
 // ========== CACTUSES ==========
@@ -101,7 +101,7 @@ function drawCactuses() {
 
 function drawGround() {
     ctx.fillStyle = '#a0d56a';
-    ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
 }
 
 function drawClouds() {
@@ -139,7 +139,7 @@ function updateCactuses() {
     if (cactusTimer > 160) {
         cactuses.push({
             x: canvas.width,
-            y: canvas.height - 90,
+            y: canvas.height - 112,
             width: 40,
             height: 60,
             hitboxX: 5,
