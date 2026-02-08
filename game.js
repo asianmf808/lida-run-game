@@ -83,61 +83,77 @@ function pause() {
 
 // ========== DRAW FUNCTIONS ==========
 function drawBackgroundPlants() {
-    bgOffset -= speed * 0.5;
+    // ОЧЕНЬ МЕДЛЕННОЕ движение фона
+    bgOffset -= speed * 0.1; // В 5 раз медленнее!
     
-    if (backgroundPlants.length < 8 || 
-        backgroundPlants[backgroundPlants.length - 1].x < canvas.width - 400) {
+    // Создаём новые растения если нужно
+    if (backgroundPlants.length < 6 || // Меньше растений
+        backgroundPlants[backgroundPlants.length - 1].x < canvas.width - 600) { // Реже
         
         const plantTypes = ['cactus', 'tree', 'bush'];
         const type = plantTypes[Math.floor(Math.random() * plantTypes.length)];
         
         backgroundPlants.push({
-            x: canvas.width + Math.random() * 200,
-            y: canvas.height - 80 - Math.random() * 30,
-            width: type === 'tree' ? 40 : 20,
-            height: type === 'tree' ? 60 : type === 'cactus' ? 40 : 25,
+            x: canvas.width + Math.random() * 300, // Дальше
+            y: canvas.height - 100 - Math.random() * 40, // Ниже
+            width: type === 'tree' ? 60 : 25, // Больше
+            height: type === 'tree' ? 80 : type === 'cactus' ? 50 : 35,
             type: type,
-            color: type === 'tree' ? '#2d5c2d' : 
-                   type === 'cactus' ? '#2a7d2a' : '#3a6b3a'
+            color: type === 'tree' ? '#3d6c3d' : // Темнее
+                   type === 'cactus' ? '#3a8d3a' : '#4a7b4a'
         });
     }
     
+    // Рисуем все растения
     for (let i = backgroundPlants.length - 1; i >= 0; i--) {
         const plant = backgroundPlants[i];
-        plant.x += bgOffset * 0.3;
         
-        if (plant.x < -100) {
+        // ОЧЕНЬ МЕДЛЕННЫЙ параллакс-эффект
+        plant.x += bgOffset * 0.1; // Было 0.3!
+        
+        // Удаляем если ушли за экран
+        if (plant.x < -150) { // Дальше уходят
             backgroundPlants.splice(i, 1);
             continue;
         }
         
+        // Рисуем растение
         ctx.fillStyle = plant.color;
         
         if (plant.type === 'tree') {
+            // Дерево (ствол + крона)
             ctx.fillRect(plant.x, plant.y, plant.width, plant.height);
-            ctx.fillStyle = '#1e4a1e';
+            
+            // Крона
+            ctx.fillStyle = '#2e5a2e';
             ctx.beginPath();
-            ctx.arc(plant.x + plant.width/2, plant.y - 10, 25, 0, Math.PI * 2);
+            ctx.arc(plant.x + plant.width/2, plant.y - 15, 30, 0, Math.PI * 2);
             ctx.fill();
             
         } else if (plant.type === 'cactus') {
+            // Кактус на заднем плане
             ctx.fillRect(plant.x, plant.y, plant.width, plant.height);
-            ctx.fillRect(plant.x - 8, plant.y + 10, 10, 15);
-            ctx.fillRect(plant.x + plant.width - 2, plant.y + 5, 10, 12);
+            
+            // "Рука" кактуса
+            ctx.fillRect(plant.x - 10, plant.y + 15, 12, 18);
+            ctx.fillRect(plant.x + plant.width - 2, plant.y + 10, 12, 15);
             
         } else {
+            // Куст
             ctx.beginPath();
             ctx.arc(plant.x + plant.width/2, plant.y + plant.height/2, 
-                   plant.width/2, 0, Math.PI * 2);
+                   plant.width/1.5, 0, Math.PI * 2);
             ctx.fill();
         }
         
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.fillRect(plant.x - 5, plant.y + plant.height, 
-                    plant.width + 10, 5);
+        // Тень под растением (слабее)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(plant.x - 8, plant.y + plant.height, 
+                    plant.width + 16, 8);
     }
     
-    if (bgOffset < -1000) bgOffset = 0;
+    // Сбрасываем смещение чтобы не уходить в минус
+    if (bgOffset < -2000) bgOffset = 0;
 }
 
 function drawPlayer() {
@@ -276,7 +292,7 @@ function gameLoop() {
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 1. PLANTES EN ARRIÈRE-PLAN
+    // 1. PLANTES EN ARRIÈRE-PLAN (ОЧЕНЬ МЕДЛЕННО)
     drawBackgroundPlants();
     
     // 2. NUAGES
@@ -331,15 +347,15 @@ function drawStartScreen() {
     drawGround();
     drawClouds();
     
-    // Plantes pour l'écran de démarrage
-    for (let i = 0; i < 5; i++) {
+    // Plantes pour l'écran de démarrage (БОЛЬШЕ И ВЫШЕ)
+    for (let i = 0; i < 4; i++) { // Меньше растений
         backgroundPlants.push({
-            x: 150 + i * 200,
-            y: canvas.height - 80 - Math.random() * 30,
-            width: Math.random() > 0.5 ? 40 : 20,
-            height: Math.random() > 0.5 ? 60 : 40,
+            x: 200 + i * 250, // Реже
+            y: canvas.height - 120 - Math.random() * 50, // Ниже
+            width: Math.random() > 0.5 ? 70 : 30, // Больше
+            height: Math.random() > 0.5 ? 90 : 60,
             type: Math.random() > 0.5 ? 'tree' : 'cactus',
-            color: Math.random() > 0.5 ? '#2d5c2d' : '#2a7d2a'
+            color: Math.random() > 0.5 ? '#3d6c3d' : '#3a8d3a'
         });
     }
     
