@@ -31,13 +31,12 @@ let player = {
     height: 90,
     jumping: false,
     vy: 0,
-    // УВЕЛИЧЕННЫЙ В 3 РАЗА ПРЫЖОК
+    // БАЛАНСИРОВАННЫЙ ПРЫЖОК
     jumpStartTime: 0,
-    jumpHoldPower: 0,
-    maxJumpHold: 800,       // В 2 раза дольше удержание (было 400)
-    baseJumpPower: -25,     // В ~2 раза выше базовый прыжок (было -15)
-    maxJumpPower: -45,      // В ~2.5 раза выше максимальный (было -28)
-    gravity: 0.25           // В 3 раза меньше гравитация (было 0.35)
+    maxJumpHold: 300,
+    baseJumpPower: -14,
+    maxJumpPower: -19,
+    gravity: 0.6
 };
 
 // ========== CACTUSES ==========
@@ -57,7 +56,6 @@ function startJump() {
     if (!player.jumping && gameRunning && !gamePaused) {
         player.jumping = true;
         player.jumpStartTime = Date.now();
-        player.jumpHoldPower = player.baseJumpPower;
         player.vy = player.baseJumpPower;
         currentGirlImg = girlJumpImg;
         spacePressed = true;
@@ -69,15 +67,9 @@ function continueJump() {
         const holdTime = Date.now() - player.jumpStartTime;
         const holdPercent = Math.min(holdTime / player.maxJumpHold, 1);
         
-        // Мощный рост силы прыжка
-        player.jumpHoldPower = player.baseJumpPower + 
-            (player.maxJumpPower - player.baseJumpPower) * Math.pow(holdPercent, 0.5);
-        
-        player.vy = player.jumpHoldPower;
-        
-        // Индикатор в консоли
-        if (holdTime % 100 < 16) { // Каждые 100мс
-            console.log(`Прыжок: ${Math.round(-player.vy)} силы, удержание: ${Math.round(holdPercent*100)}%`);
+        // Плавное усиление
+        if (holdPercent < 0.5) {
+            player.vy = player.baseJumpPower + (player.maxJumpPower - player.baseJumpPower) * (holdPercent * 2);
         }
     }
 }
@@ -118,14 +110,6 @@ function drawPlayer() {
         ctx.fillStyle = '#ff66b2';
         ctx.fillRect(player.x, player.y, player.width, player.height);
     }
-    
-    // Индикатор высоты прыжка
-    if (player.jumping) {
-        const jumpHeight = Math.max(0, (canvas.height - 100) - player.y);
-        ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
-        ctx.font = '12px Arial';
-        ctx.fillText(`${Math.round(jumpHeight)}px`, player.x - 20, player.y - 10);
-    }
 }
 
 function drawCactuses() {
@@ -156,23 +140,6 @@ function drawUI() {
     ctx.font = 'bold 24px Arial';
     ctx.fillText(`Счёт: ${score}`, 20, 40);
     ctx.fillText(`Рекорд: ${best}`, canvas.width - 170, 40);
-    
-    // Индикатор прыжка
-    if (player.jumping && spacePressed) {
-        const holdTime = Date.now() - player.jumpStartTime;
-        const holdPercent = Math.min(holdTime / player.maxJumpHold, 1);
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(player.x - 15, player.y - 40, 100, 12);
-        
-        ctx.fillStyle = holdPercent > 0.7 ? '#ff0000' : 
-                       holdPercent > 0.4 ? '#ffff00' : '#00ff00';
-        ctx.fillRect(player.x - 15, player.y - 40, 100 * holdPercent, 12);
-        
-        ctx.fillStyle = '#000';
-        ctx.font = '10px Arial';
-        ctx.fillText(`Сила: ${Math.round(holdPercent*100)}%`, player.x - 10, player.y - 30);
-    }
 }
 
 // ========== GAME LOGIC ==========
@@ -182,13 +149,12 @@ function updatePlayer() {
             continueJump();
         }
         
-        // ОЧЕНЬ МАЛЕНЬКАЯ ГРАВИТАЦИЯ
         player.vy += player.gravity;
         player.y += player.vy;
         
-        // Максимальная высота прыжка (почти до верха экрана)
-        if (player.y < 50) {
-            player.y = 50;
+        // Максимальная высота - не выше 150px от земли
+        if (player.y < canvas.height - 250) {
+            player.y = canvas.height - 250;
             player.vy = 0;
         }
         
@@ -199,7 +165,6 @@ function updatePlayer() {
             player.jumping = false;
             currentGirlImg = girlRunImg;
             spacePressed = false;
-            console.log('Прыжок завершён');
         }
     }
 }
@@ -212,11 +177,11 @@ function updateCactuses() {
             y: canvas.height - 90,
             width: 40,
             height: 60,
-            // СУПЕР МАЛЕНЬКИЙ ХИТБОКС
-            hitboxX: 18,
-            hitboxY: 50,           // Только самый низ кактуса
-            hitboxWidth: 4,
-            hitboxHeight: 5,
+            // МИНИМАЛЬНЫЙ НО РАБОЧИЙ ХИТБОКС
+            hitboxX: 10,
+            hitboxY: 40,           // Только нижняя треть кактуса
+            hitboxWidth: 20,       // Уже видимого
+            hitboxHeight: 15,      // Только самый низ
             passed: false
         });
         cactusTimer = 0;
@@ -235,10 +200,8 @@ function updateCactuses() {
 }
 
 function checkCollisions() {
-    // ВРЕМЕННО ОТКЛЮЧЕНО - УДАЛИ ЭТУ СТРОКУ ПОСЛЕ ТЕСТА
-    return false;
-    
     for (let cactus of cactuses) {
+        // ХИТБОКС КАКТУСА (маленький, но есть)
         const cactusHitbox = {
             x: cactus.x + cactus.hitboxX,
             y: cactus.y + cactus.hitboxY,
@@ -246,20 +209,13 @@ function checkCollisions() {
             height: cactus.hitboxHeight
         };
         
+        // ХИТБОКС ИГРОКА (только ноги)
         const playerHitbox = {
-            x: player.x + 35,
-            y: player.y + 85,      // Только самые ноги
-            width: player.width - 70,
-            height: player.height - 85
+            x: player.x + 25,
+            y: player.y + 75,      // Только нижняя часть
+            width: player.width - 50,
+            height: player.height - 80
         };
-        
-        // Визуализация хитбоксов
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(playerHitbox.x, playerHitbox.y, playerHitbox.width, playerHitbox.height);
-        
-        ctx.strokeStyle = 'blue';
-        ctx.strokeRect(cactusHitbox.x, cactusHitbox.y, cactusHitbox.width, cactusHitbox.height);
         
         if (
             playerHitbox.x < cactusHitbox.x + cactusHitbox.width &&
@@ -338,15 +294,14 @@ function drawStartScreen() {
     drawClouds();
     ctx.fillStyle = '#ff3366';
     ctx.font = 'bold 48px Arial';
-    ctx.fillText('LIDA RUN - МЕГА ПРЫЖКИ', canvas.width / 2 - 240, 100);
+    ctx.fillText('LIDA RUN', canvas.width / 2 - 120, 100);
     if (girlRunImg.complete) {
         ctx.drawImage(girlRunImg, canvas.width / 2 - 35, 150, 70, 90);
     }
     ctx.fillStyle = '#333';
     ctx.font = '20px Arial';
     ctx.fillText('Нажми ENTER или кнопку START', canvas.width / 2 - 160, 280);
-    ctx.fillText('ПРОБЕЛ - прыжок (ДЕРЖИ для супер-высоты!)', canvas.width / 2 - 230, 310);
-    ctx.fillText('Прыжок в 3 раза выше и дольше!', canvas.width / 2 - 160, 340);
+    ctx.fillText('ПРОБЕЛ - прыжок (держи для чуть выше)', canvas.width / 2 - 200, 310);
 }
 
 girlRunImg.onload = drawStartScreen;
