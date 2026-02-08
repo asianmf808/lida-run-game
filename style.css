@@ -1,0 +1,34 @@
+body {
+    text-align: center;
+    font-family: Arial;
+    background: #ffe6f2;
+    margin: 20px;
+}
+
+h1 {
+    color: #ff66b2;
+}
+
+canvas {
+    background: #f0f8ff;
+    border: 3px solid #ff66b2;
+    border-radius: 10px;
+    margin: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 18px;
+    margin: 10px;
+    background: #ff66b2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#score, #best {
+    font-size: 24px;
+    font-weight: bold;
+    color: #cc0066;
+}
