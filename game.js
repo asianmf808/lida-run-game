@@ -32,7 +32,7 @@ let player = {
     jumping: false,
     vy: 0,
     // ВЫСОКИЙ И ДОЛГИЙ ПРЫЖОК
-    jumpPower: -22.5,
+    jumpPower: -35.5,
     gravity: 0.80// УМЕНЬШИЛ ГРАВИТАЦИЮ - прыжок дольше
 };
 
