@@ -139,7 +139,7 @@ function updateCactuses() {
     if (cactusTimer > 160) {
         cactuses.push({
             x: canvas.width,
-            y: canvas.height - 112,
+            y: canvas.height - 100,
             width: 40,
             height: 60,
             hitboxX: 5,
