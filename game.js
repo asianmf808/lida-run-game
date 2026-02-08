@@ -31,12 +31,11 @@ let player = {
     height: 90,
     jumping: false,
     vy: 0,
-    // Переменные для длинного прыжка
     jumpStartTime: 0,
     jumpHoldPower: 0,
-    maxJumpHold: 300, // Максимальное время удержания прыжка (мс)
-    baseJumpPower: -12, // Базовый прыжок
-    maxJumpPower: -20  // Максимальный прыжок при удержании
+    maxJumpHold: 400,
+    baseJumpPower: -15,
+    maxJumpPower: -28
 };
 
 // ========== CACTUSES ==========
@@ -51,9 +50,7 @@ function updateScore() {
 
 // ========== GAME CONTROLS ==========
 let spacePressed = false;
-let spacePressTime = 0;
 
-// Начало прыжка
 function startJump() {
     if (!player.jumping && gameRunning && !gamePaused) {
         player.jumping = true;
@@ -62,29 +59,21 @@ function startJump() {
         player.vy = player.baseJumpPower;
         currentGirlImg = girlJumpImg;
         spacePressed = true;
-        spacePressTime = Date.now();
     }
 }
 
-// Продолжение прыжка (пока держим пробел)
 function continueJump() {
     if (player.jumping && spacePressed) {
         const holdTime = Date.now() - player.jumpStartTime;
         const holdPercent = Math.min(holdTime / player.maxJumpHold, 1);
-        
-        // Чем дольше держим, тем сильнее прыжок
         player.jumpHoldPower = player.baseJumpPower + 
-            (player.maxJumpPower - player.baseJumpPower) * holdPercent;
-        
-        // Плавно увеличиваем скорость
+            (player.maxJumpPower - player.baseJumpPower) * Math.pow(holdPercent, 0.7);
         player.vy = player.jumpHoldPower;
     }
 }
 
-// Конец прыжка
 function endJump() {
     spacePressed = false;
-    // Продолжаем прыжок с текущей силой, но без удержания
 }
 
 function start() {
@@ -119,36 +108,12 @@ function drawPlayer() {
         ctx.fillStyle = '#ff66b2';
         ctx.fillRect(player.x, player.y, player.width, player.height);
     }
-    
-    // ОТЛАДКА: рисуем хитбокс игрока (красная рамка)
-    if (false) { // поменяй на true для отладки
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(
-            player.x + 25,  // Минимальный хитбокс
-            player.y + 35,
-            player.width - 50,
-            player.height - 60
-        );
-    }
 }
 
 function drawCactuses() {
     for (let cactus of cactuses) {
         if (cactusImg.complete) {
             ctx.drawImage(cactusImg, cactus.x, cactus.y, cactus.width, cactus.height);
-            
-            // ОТЛАДКА: рисуем хитбокс кактуса (синяя рамка)
-            if (false) { // поменяй на true для отладки
-                ctx.strokeStyle = 'blue';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(
-                    cactus.x + cactus.hitboxX,
-                    cactus.y + cactus.hitboxY,
-                    cactus.hitboxWidth,
-                    cactus.hitboxHeight
-                );
-            }
         } else {
             ctx.fillStyle = '#339933';
             ctx.fillRect(cactus.x, cactus.y, cactus.width, cactus.height);
@@ -173,34 +138,16 @@ function drawUI() {
     ctx.font = 'bold 24px Arial';
     ctx.fillText(`Счёт: ${score}`, 20, 40);
     ctx.fillText(`Рекорд: ${best}`, canvas.width - 170, 40);
-    
-    // Индикатор силы прыжка
-    if (player.jumping && spacePressed) {
-        const holdTime = Date.now() - player.jumpStartTime;
-        const holdPercent = Math.min(holdTime / player.maxJumpHold, 1);
-        
-        ctx.fillStyle = 'rgba(255, 204, 0, 0.3)';
-        ctx.fillRect(player.x - 10, player.y - 30, 90, 10);
-        
-        ctx.fillStyle = holdPercent > 0.8 ? '#ff3300' : 
-                       holdPercent > 0.5 ? '#ff9900' : '#33cc33';
-        ctx.fillRect(player.x - 10, player.y - 30, 90 * holdPercent, 10);
-    }
 }
 
 // ========== GAME LOGIC ==========
 function updatePlayer() {
     if (player.jumping) {
-        // Продолжаем прыжок, если держим пробел
         if (spacePressed) {
             continueJump();
         }
-        
-        // Гравитация
-        player.vy += 0.45; // Меньше гравитации для высокого прыжка
+        player.vy += 0.35;
         player.y += player.vy;
-        
-        // Земля
         if (player.y > canvas.height - 100) {
             player.y = canvas.height - 100;
             player.vy = 0;
@@ -213,30 +160,26 @@ function updatePlayer() {
 
 function updateCactuses() {
     cactusTimer++;
-    
-    if (cactusTimer > 160) { // Чуть чаще для баланса
+    if (cactusTimer > 160) {
         cactuses.push({
             x: canvas.width,
             y: canvas.height - 90,
             width: 40,
             height: 60,
-            // МИНИМАЛЬНЫЙ ХИТБОКС (только центр)
-            hitboxX: 15,           // Большой отступ
-            hitboxY: 20,           // Большой отступ сверху
-            hitboxWidth: 10,       // Очень узкий
-            hitboxHeight: 20,      // Очень низкий
+            // УЗКИЙ И НИЗКИЙ ХИТБОКС
+            hitboxX: 15,           // Отступ слева
+            hitboxY: 40,           // Отступ сверху (только нижняя часть кактуса)
+            hitboxWidth: 10,       // Очень узкий (10px)
+            hitboxHeight: 10,      // Очень низкий (10px)
             passed: false
         });
         cactusTimer = 0;
     }
-    
     for (let i = cactuses.length - 1; i >= 0; i--) {
         cactuses[i].x -= speed;
-        
         if (cactuses[i].x < -50) {
             cactuses.splice(i, 1);
         }
-        
         if (!cactuses[i].passed && cactuses[i].x < player.x) {
             cactuses[i].passed = true;
             score++;
@@ -246,8 +189,11 @@ function updateCactuses() {
 }
 
 function checkCollisions() {
+    // ВРЕМЕННО ОТКЛЮЧАЕМ ДЛЯ ТЕСТА - УДАЛИ ЭТУ СТРОКУ!
+    return false;
+    
     for (let cactus of cactuses) {
-        // ХИТБОКС КАКТУСА (минимальный)
+        // ХИТБОКС КАКТУСА - только нижний центр
         const cactusHitbox = {
             x: cactus.x + cactus.hitboxX,
             y: cactus.y + cactus.hitboxY,
@@ -255,13 +201,21 @@ function checkCollisions() {
             height: cactus.hitboxHeight
         };
         
-        // ХИТБОКС ИГРОКА (минимальный - только центр)
+        // ХИТБОКС ИГРОКА - только нижний центр
         const playerHitbox = {
-            x: player.x + 25,      // Большой отступ
-            y: player.y + 35,      // Большой отступ сверху
-            width: player.width - 50,   // Очень узкий
-            height: player.height - 60  // Очень низкий
+            x: player.x + 30,      // Большой отступ по ширине
+            y: player.y + 70,      // Только нижняя часть игрока
+            width: player.width - 60,   // Очень узкий (10px)
+            height: player.height - 75  // Очень низкий (15px)
         };
+        
+        // Визуализация для отладки
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(playerHitbox.x, playerHitbox.y, playerHitbox.width, playerHitbox.height);
+        
+        ctx.strokeStyle = 'blue';
+        ctx.strokeRect(cactusHitbox.x, cactusHitbox.y, cactusHitbox.width, cactusHitbox.height);
         
         if (
             playerHitbox.x < cactusHitbox.x + cactusHitbox.width &&
@@ -269,6 +223,9 @@ function checkCollisions() {
             playerHitbox.y < cactusHitbox.y + cactusHitbox.height &&
             playerHitbox.y + playerHitbox.height > cactusHitbox.y
         ) {
+            console.log('СТОЛКНОВЕНИЕ!');
+            console.log('Игрок:', playerHitbox);
+            console.log('Кактус:', cactusHitbox);
             return true;
         }
     }
@@ -278,7 +235,6 @@ function checkCollisions() {
 function gameOver() {
     gameRunning = false;
     gameOverFlag = true;
-    
     if (score > best) {
         best = score;
         localStorage.setItem('lidaBest', best);
@@ -292,27 +248,21 @@ function gameOver() {
 // ========== GAME LOOP ==========
 function gameLoop() {
     if (!gameRunning || gamePaused) return;
-    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     drawClouds();
     drawGround();
     drawCactuses();
     drawPlayer();
     drawUI();
-    
     updatePlayer();
     updateCactuses();
-    
     if (checkCollisions()) {
         gameOver();
         return;
     }
-    
     if (score > 0 && score % 15 === 0) {
         speed = 2.5 + Math.floor(score / 25);
     }
-    
     requestAnimationFrame(gameLoop);
 }
 
@@ -324,17 +274,14 @@ document.addEventListener('keydown', (e) => {
             startJump();
         }
     }
-    
     if (e.code === 'KeyP') {
         pause();
     }
-    
     if (e.code === 'Enter' && !gameRunning) {
         start();
     }
 });
 
-// Отслеживаем удержание пробела
 document.addEventListener('keyup', (e) => {
     if (e.code === 'Space') {
         endJump();
@@ -348,53 +295,17 @@ function drawStartScreen() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGround();
     drawClouds();
-    
     ctx.fillStyle = '#ff3366';
     ctx.font = 'bold 48px Arial';
     ctx.fillText('LIDA RUN', canvas.width / 2 - 120, 100);
-    
     if (girlRunImg.complete) {
         ctx.drawImage(girlRunImg, canvas.width / 2 - 35, 150, 70, 90);
     }
-    
     ctx.fillStyle = '#333';
     ctx.font = '20px Arial';
     ctx.fillText('Нажми ENTER или кнопку START', canvas.width / 2 - 160, 280);
     ctx.fillText('ПРОБЕЛ - прыжок (держи для высокого прыжка)', canvas.width / 2 - 220, 310);
-    ctx.fillText('Минимальные хитбоксы - легко уворачиваться!', canvas.width / 2 - 210, 340);
 }
 
 girlRunImg.onload = drawStartScreen;
-
-if (girlRunImg.complete) {
-    drawStartScreen();
-}
-
-// Touch support для мобильных
-let touchStartTime = 0;
-let touching = false;
-
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    touchStartTime = Date.now();
-    touching = true;
-    
-    if (!gameRunning) {
-        start();
-    } else if (!player.jumping) {
-        startJump();
-    }
-});
-
-canvas.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    touching = false;
-    endJump();
-});
-
-// Обновляем прыжок при удержании тача
-setInterval(() => {
-    if (touching && player.jumping) {
-        continueJump();
-    }
-}, 50);
+if (girlRunImg.complete) drawStartScreen();
