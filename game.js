@@ -10,9 +10,9 @@ const girlRunImg = new Image();
 const girlJumpImg = new Image();
 const cactusImg = new Image();
 
-girlRunImg.src = 'images/girl-run.png';
-girlJumpImg.src = 'images/girl-jump.png';
-cactusImg.src = 'images/cactus.png';
+girlRunImg.src = './images/girl-run.png';
+girlJumpImg.src = './images/girl-jump.png';
+cactusImg.src = './images/cactus.png';
 
 // Current player image
 let currentGirlImg = girlRunImg;
