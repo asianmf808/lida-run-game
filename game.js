@@ -10,9 +10,15 @@ const girlRunImg = new Image();
 const girlJumpImg = new Image();
 const cactusImg = new Image();
 
+// Fix for GitHub Pages paths
 girlRunImg.src = './images/girl-run.png';
 girlJumpImg.src = './images/girl-jump.png';
 cactusImg.src = './images/cactus.png';
+
+// Error checking
+girlRunImg.onerror = () => console.error('❌ girl-run.png не загрузилась!');
+girlJumpImg.onerror = () => console.error('❌ girl-jump.png не загрузилась!');
+cactusImg.onerror = () => console.error('❌ cactus.png не загрузилась!');
 
 // Current player image
 let currentGirlImg = girlRunImg;
@@ -22,7 +28,7 @@ let score = 0;
 let best = localStorage.getItem('lidaBest') || 0;
 let gameRunning = false;
 let gamePaused = false;
-let speed = 5;
+let speed = 3; // ЗАМЕДЛЕНО: было 5
 let gameOverFlag = false;
 
 // ========== PLAYER ==========
@@ -33,7 +39,7 @@ let player = {
     height: 90,
     jumping: false,
     vy: 0,
-    jumpPower: -16
+    jumpPower: -12 // ЗАМЕДЛЕНО: было -16
 };
 
 // ========== CACTUSES ==========
@@ -61,7 +67,7 @@ function start() {
         gamePaused = false;
         gameOverFlag = false;
         score = 0;
-        speed = 5;
+        speed = 3; // Сброс к медленной скорости
         cactuses = [];
         player.y = canvas.height - 100;
         player.jumping = false;
@@ -109,16 +115,17 @@ function drawGround() {
     
     // Ground details
     ctx.fillStyle = '#8cc152';
-    for (let i = 0; i < canvas.width; i += 30) {
-        ctx.fillRect(i, canvas.height - 40, 15, 5);
+    for (let i = 0; i < canvas.width; i += 40) { // Реже детали
+        ctx.fillRect(i, canvas.height - 40, 20, 5);
     }
 }
 
 function drawClouds() {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.fillRect(150, 80, 70, 25);
-    ctx.fillRect(400, 60, 90, 30);
-    ctx.fillRect(600, 90, 60, 20);
+    // Медленное движение облаков
+    ctx.fillRect(150 + score * 0.2, 80, 70, 25);
+    ctx.fillRect(400 + score * 0.15, 60, 90, 30);
+    ctx.fillRect(600 + score * 0.1, 90, 60, 20);
 }
 
 function drawUI() {
@@ -132,12 +139,19 @@ function drawUI() {
     ctx.fillStyle = '#ff3366';
     ctx.fillText(`SCORE: ${score}`, 20, 40);
     ctx.fillText(`BEST: ${best}`, canvas.width - 150, 40);
+    
+    // Speed indicator
+    if (speed > 3) {
+        ctx.fillStyle = '#ff9900';
+        ctx.font = '16px Arial';
+        ctx.fillText(`Speed: ${speed}`, canvas.width / 2 - 40, 30);
+    }
 }
 
 // ========== GAME LOGIC ==========
 function updatePlayer() {
     if (player.jumping) {
-        player.vy += 0.8;
+        player.vy += 0.6; // ЗАМЕДЛЕНО: было 0.8 (меньше гравитация)
         player.y += player.vy;
         
         // Hit ground
@@ -153,8 +167,8 @@ function updatePlayer() {
 function updateCactuses() {
     cactusTimer++;
     
-    // Create new cactus
-    if (cactusTimer > 80 - speed * 3) {
+    // Create new cactus - РЕЖЕ: было 80 - speed * 3
+    if (cactusTimer > 120 - speed * 2) {
         cactuses.push({
             x: canvas.width,
             y: canvas.height - 90,
@@ -206,9 +220,9 @@ function gameOver() {
         best = score;
         localStorage.setItem('lidaBest', best);
         updateScore();
-        setTimeout(() => alert(`🎉 NEW RECORD: ${score}!`), 100);
+        setTimeout(() => alert(`🎉 НОВЫЙ РЕКОРД: ${score}!`), 100);
     } else {
-        setTimeout(() => alert(`Game Over! Score: ${score}`), 100);
+        setTimeout(() => alert(`Игра окончена! Счёт: ${score}`), 100);
     }
 }
 
@@ -236,9 +250,9 @@ function gameLoop() {
         return;
     }
     
-    // Increase difficulty
-    if (score > 0 && score % 10 === 0) {
-        speed = 5 + Math.floor(score / 10);
+    // Increase difficulty - МЕДЛЕННЕЕ: было каждые 10 очков
+    if (score > 0 && score % 15 === 0) {
+        speed = 3 + Math.floor(score / 20); // Медленнее рост
     }
     
     requestAnimationFrame(gameLoop);
@@ -282,18 +296,32 @@ function drawStartScreen() {
     // Instructions
     ctx.fillStyle = '#333';
     ctx.font = '20px Arial';
-    ctx.fillText('Press ENTER or click START to play', canvas.width / 2 - 160, 280);
-    ctx.fillText('SPACE to jump • P to pause', canvas.width / 2 - 130, 310);
+    ctx.fillText('Нажми ENTER или кнопку START', canvas.width / 2 - 160, 280);
+    ctx.fillText('ПРОБЕЛ - прыжок • P - пауза', canvas.width / 2 - 140, 310);
+    
+    // Speed info
+    ctx.fillStyle = '#666';
+    ctx.font = '16px Arial';
+    ctx.fillText('⚡ Версия с комфортной скоростью', canvas.width / 2 - 150, 350);
 }
 
 // Draw start screen when images load
 girlRunImg.onload = drawStartScreen;
 girlJumpImg.onload = function() {
-    console.log('Jump image loaded');
+    console.log('✅ Jump image loaded');
 };
 cactusImg.onload = function() {
-    console.log('Cactus image loaded');
+    console.log('✅ Cactus image loaded');
 };
+
+// Debug info after 3 seconds
+setTimeout(() => {
+    console.log('Картинки загружены:');
+    console.log('Бег:', girlRunImg.complete);
+    console.log('Прыжок:', girlJumpImg.complete);
+    console.log('Кактус:', cactusImg.complete);
+    console.log('Текущая скорость:', speed);
+}, 3000);
 
 // Also draw start screen if images are already loaded
 if (girlRunImg.complete) {
@@ -304,9 +332,18 @@ if (girlRunImg.complete) {
 
 // Add pause button functionality to HTML buttons
 document.addEventListener('DOMContentLoaded', function() {
-    // If you have a pause button in HTML, add this
-    const pauseBtn = document.querySelector('button[onclick*="pause"]');
-    if (pauseBtn) {
-        pauseBtn.onclick = pause;
-    }
+    // If you have a pause button in HTML
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => {
+        if (btn.textContent.includes('PAUSE') || btn.textContent.includes('Пауза')) {
+            btn.onclick = pause;
+        }
+    });
+});
+
+// Touch support for mobile
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (!gameRunning) start();
+    else jump();
 });
