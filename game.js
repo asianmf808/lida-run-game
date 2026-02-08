@@ -146,7 +146,7 @@ function updateCactuses() {
             x: canvas.width,
             // ИСПРАВЛЕНО: кактус стоит на земле (высота кактуса 60px, земля 50px)
             // canvas.height - 50 (земля) - 60 (кактус) = canvas.height - 110
-            y: canvas.height - 110, // БЫЛО: -112
+            y: canvas.height - 105, // БЫЛО: -112
             width: 40,
             height: 60,
             hitboxX: 5,
