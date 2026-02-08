@@ -31,12 +31,8 @@ let player = {
     height: 90,
     jumping: false,
     vy: 0,
-    // БАЛАНСИРОВАННЫЙ ПРЫЖОК
-    jumpStartTime: 0,
-    maxJumpHold: 300,
-    baseJumpPower: -14,
-    maxJumpPower: -19,
-    gravity: 0.6
+    jumpPower: -15,
+    gravity: 0.7
 };
 
 // ========== CACTUSES ==========
@@ -50,32 +46,12 @@ function updateScore() {
 }
 
 // ========== GAME CONTROLS ==========
-let spacePressed = false;
-
-function startJump() {
+function jump() {
     if (!player.jumping && gameRunning && !gamePaused) {
         player.jumping = true;
-        player.jumpStartTime = Date.now();
-        player.vy = player.baseJumpPower;
+        player.vy = player.jumpPower;
         currentGirlImg = girlJumpImg;
-        spacePressed = true;
     }
-}
-
-function continueJump() {
-    if (player.jumping && spacePressed) {
-        const holdTime = Date.now() - player.jumpStartTime;
-        const holdPercent = Math.min(holdTime / player.maxJumpHold, 1);
-        
-        // Плавное усиление
-        if (holdPercent < 0.5) {
-            player.vy = player.baseJumpPower + (player.maxJumpPower - player.baseJumpPower) * (holdPercent * 2);
-        }
-    }
-}
-
-function endJump() {
-    spacePressed = false;
 }
 
 function start() {
@@ -88,7 +64,6 @@ function start() {
         cactuses = [];
         player.y = canvas.height - 100;
         player.jumping = false;
-        spacePressed = false;
         currentGirlImg = girlRunImg;
         updateScore();
         gameLoop();
@@ -145,18 +120,8 @@ function drawUI() {
 // ========== GAME LOGIC ==========
 function updatePlayer() {
     if (player.jumping) {
-        if (spacePressed) {
-            continueJump();
-        }
-        
         player.vy += player.gravity;
         player.y += player.vy;
-        
-        // Максимальная высота - не выше 150px от земли
-        if (player.y < canvas.height - 250) {
-            player.y = canvas.height - 250;
-            player.vy = 0;
-        }
         
         // Земля
         if (player.y > canvas.height - 100) {
@@ -164,7 +129,6 @@ function updatePlayer() {
             player.vy = 0;
             player.jumping = false;
             currentGirlImg = girlRunImg;
-            spacePressed = false;
         }
     }
 }
@@ -177,11 +141,11 @@ function updateCactuses() {
             y: canvas.height - 90,
             width: 40,
             height: 60,
-            // МИНИМАЛЬНЫЙ НО РАБОЧИЙ ХИТБОКС
-            hitboxX: 10,
-            hitboxY: 40,           // Только нижняя треть кактуса
-            hitboxWidth: 20,       // Уже видимого
-            hitboxHeight: 15,      // Только самый низ
+            // РАБОЧИЙ ХИТБОКС
+            hitboxX: 5,
+            hitboxY: 25,
+            hitboxWidth: 30,
+            hitboxHeight: 30,
             passed: false
         });
         cactusTimer = 0;
@@ -201,7 +165,7 @@ function updateCactuses() {
 
 function checkCollisions() {
     for (let cactus of cactuses) {
-        // ХИТБОКС КАКТУСА (маленький, но есть)
+        // ХИТБОКС КАКТУСА
         const cactusHitbox = {
             x: cactus.x + cactus.hitboxX,
             y: cactus.y + cactus.hitboxY,
@@ -209,12 +173,12 @@ function checkCollisions() {
             height: cactus.hitboxHeight
         };
         
-        // ХИТБОКС ИГРОКА (только ноги)
+        // ХИТБОКС ИГРОКА
         const playerHitbox = {
-            x: player.x + 25,
-            y: player.y + 75,      // Только нижняя часть
-            width: player.width - 50,
-            height: player.height - 80
+            x: player.x + 15,
+            y: player.y + 50,
+            width: player.width - 30,
+            height: player.height - 60
         };
         
         if (
@@ -267,21 +231,13 @@ function gameLoop() {
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
         e.preventDefault();
-        if (!player.jumping && gameRunning && !gamePaused) {
-            startJump();
-        }
+        jump();
     }
     if (e.code === 'KeyP') {
         pause();
     }
     if (e.code === 'Enter' && !gameRunning) {
         start();
-    }
-});
-
-document.addEventListener('keyup', (e) => {
-    if (e.code === 'Space') {
-        endJump();
     }
 });
 
@@ -301,7 +257,7 @@ function drawStartScreen() {
     ctx.fillStyle = '#333';
     ctx.font = '20px Arial';
     ctx.fillText('Нажми ENTER или кнопку START', canvas.width / 2 - 160, 280);
-    ctx.fillText('ПРОБЕЛ - прыжок (держи для чуть выше)', canvas.width / 2 - 200, 310);
+    ctx.fillText('ПРОБЕЛ - прыжок (просто нажми)', canvas.width / 2 - 160, 310);
 }
 
 girlRunImg.onload = drawStartScreen;
