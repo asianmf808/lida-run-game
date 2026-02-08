@@ -198,9 +198,9 @@ function gameOver() {
         best = score;
         localStorage.setItem('lidaBest', best);
         updateScore();
-        setTimeout(() => alert(`🎉 НОВЫЙ РЕКОРД: ${score}!`), 100);
+        setTimeout(() => alert(`🎉 Nouveau record! Youpi! ${score}!`), 100);
     } else {
-        setTimeout(() => alert(`Игра окончена! Счёт: ${score}`), 100);
+        setTimeout(() => alert(`La partie est finie… Miaou… Score : ${score}`), 100);
     }
 }
 
@@ -234,7 +234,7 @@ document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyP') {
         pause();
     }
-    if (e.code === 'Enter' && !gameRunning) {
+    if (e.code === 'Miaou ! C’est parti!' && !gameRunning) {
         start();
     }
 });
@@ -248,14 +248,14 @@ function drawStartScreen() {
     drawClouds();
     ctx.fillStyle = '#ff3366';
     ctx.font = 'bold 48px Arial';
-    ctx.fillText('LIDA RUN', canvas.width / 2 - 120, 100);
+    ctx.fillText('Je cours vers Paris', canvas.width / 2 - 120, 100);
     if (girlRunImg.complete) {
         ctx.drawImage(girlRunImg, canvas.width / 2 - 35, 150, 70, 90);
     }
     ctx.fillStyle = '#333';
     ctx.font = '20px Arial';
-    ctx.fillText('Нажми ENTER или кнопку START', canvas.width / 2 - 160, 280);
-    ctx.fillText('ПРОБЕЛ - длинный и высокий прыжок', canvas.width / 2 - 190, 310);
+    ctx.fillText('Appuie doucement sur Entrée ou sur le bouton Démarrer', canvas.width / 2 - 160, 280);
+    ctx.fillText('Appuie sur la barre d’espace, ma petite chatte', canvas.width / 2 - 190, 310);
 }
 
 girlRunImg.onload = drawStartScreen;
